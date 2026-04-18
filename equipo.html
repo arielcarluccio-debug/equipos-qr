@@ -39,50 +39,66 @@
     Cargando...
   </div>
 
-  <script>
-    const equipos = {
-      "EQ001": {
-        cliente: "ACME SA",
-        tipo: "Compresor",
-        serie: "12345",
-        modelo: "X100",
-        estado: "Operativo",
-        ubicacion: "Planta 1"
-      },
-      "EQ002": {
-        cliente: "Metalúrgica Sur",
-        tipo: "Pulmón",
-        serie: "78910",
-        modelo: "P200",
-        estado: "Fuera de servicio",
-        ubicacion: "Depósito"
+<script>
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
+
+const contenedor = document.getElementById("contenido");
+
+// 🔗 PEGÁ ACÁ TU LINK
+const URL = "https://docs.google.com/spreadsheets/d/1wFIR-6gcuVerEvO0Hwa1hXHj2OFcuoJmp_gVGycR5Vk/gviz/tq?tqx=out:json";
+
+fetch(URL)
+  .then(res => res.text())
+  .then(text => {
+    // limpiar respuesta de Google
+    const json = JSON.parse(text.substr(47).slice(0, -2));
+    const rows = json.table.rows;
+
+    let equipo = null;
+
+    rows.forEach(r => {
+      const fila = r.c;
+
+      const idEquipo = fila[1]?.v; // columna IDEquipo
+
+      if (idEquipo == id) {
+        equipo = {
+          cliente: fila[2]?.v,
+          tipo: fila[4]?.v,
+          serie: fila[5]?.v,
+          modelo: fila[6]?.v,
+          estado: fila[15]?.v,
+          ubicacion: fila[9]?.v,
+          foto: fila[3]?.v // columna Foto
+        };
       }
-    };
+    });
 
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get("id");
-
-    const contenedor = document.getElementById("contenido");
-
-    if (!id) {
-      contenedor.innerHTML = `<p class="error">No se recibió ningún ID de equipo.</p>`;
-    } else {
-      const equipo = equipos[id];
-
-      if (!equipo) {
-        contenedor.innerHTML = `<p class="error">Equipo no encontrado: ${id}</p>`;
-      } else {
-        contenedor.innerHTML = `
-          <h1>Ficha del equipo ${id}</h1>
-          <div class="fila"><span class="label">Cliente:</span> ${equipo.cliente}</div>
-          <div class="fila"><span class="label">Tipo:</span> ${equipo.tipo}</div>
-          <div class="fila"><span class="label">Serie:</span> ${equipo.serie}</div>
-          <div class="fila"><span class="label">Modelo:</span> ${equipo.modelo}</div>
-          <div class="fila"><span class="label">Estado:</span> ${equipo.estado}</div>
-          <div class="fila"><span class="label">Ubicación:</span> ${equipo.ubicacion}</div>
-        `;
-      }
+    if (!equipo) {
+      contenedor.innerHTML = `<p class="error">Equipo no encontrado: ${id}</p>`;
+      return;
     }
-  </script>
+
+    contenedor.innerHTML = `
+      <img src="logo.png" style="width:150px; margin-bottom:20px;">
+
+      <h1>Ficha del equipo ${id}</h1>
+
+      <img src="${equipo.foto}" style="width:100%; max-width:400px; border-radius:10px; margin-bottom:15px;">
+
+      <div class="fila"><b>Cliente:</b> ${equipo.cliente}</div>
+      <div class="fila"><b>Tipo:</b> ${equipo.tipo}</div>
+      <div class="fila"><b>Serie:</b> ${equipo.serie}</div>
+      <div class="fila"><b>Modelo:</b> ${equipo.modelo}</div>
+      <div class="fila"><b>Estado:</b> ${equipo.estado}</div>
+      <div class="fila"><b>Ubicación:</b> ${equipo.ubicacion}</div>
+    `;
+  })
+  .catch(err => {
+    contenedor.innerHTML = `<p class="error">Error cargando datos</p>`;
+    console.error(err);
+  });
+</script>
 </body>
 </html>
