@@ -49,10 +49,16 @@ const contenedor = document.getElementById("contenido");
 const URL = "https://script.google.com/macros/s/AKfycbwtOZQa8P8W1gHpr2PO6hDnxIg5ojQ_0DlFlabUmkwooNaMEr4Mk2ugi9UUkwbVuLs/exec";
 
 fetch(URL)
-  .then(res => res.json())
-  .then(data => {
+  .then(res => res.text())
+  .then(text => {
+    console.log("RESPUESTA RAW:", text);
+  })
+  .catch(err => {
+    contenedor.innerHTML = `<p class="error">Error cargando datos</p>`;
+    console.error(err);
+  });
 
-    const equipo = data.find(e => e.id == id);
+  /*  const equipo = data.find(e => e.id == id);
 
     if (!equipo) {
       contenedor.innerHTML = "Equipo no encontrado";
@@ -80,7 +86,7 @@ fetch(URL)
   .catch(err => {
     contenedor.innerHTML = `<p class="error">Error cargando datos</p>`;
     console.error(err);
-  });
+  });*/
 </script>
 </body>
 </html>
