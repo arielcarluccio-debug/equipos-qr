@@ -81,19 +81,26 @@ fetch(URL)
     }
 
     contenedor.innerHTML = `
-      <img src="logo.png" style="width:150px; margin-bottom:20px;">
+  <div style="text-align:center; margin-bottom:20px;">
+    <img src="logo.png" style="width:150px; margin-bottom:10px;">
+    
+    <div style="font-size:14px; color:#555;">
+      servicios@acaringenieria.com<br>
+      Tel: 11 62 86 68 64
+    </div>
+  </div>
 
-      <h1>Ficha del equipo ${id}</h1>
+  <h1 style="text-align:center;">Ficha del equipo ${id}</h1>
 
-      <img src="${equipo.foto}" style="width:100%; max-width:400px; border-radius:10px; margin-bottom:15px;">
+  <img src="${equipo.foto}" style="width:100%; max-width:400px; border-radius:10px; margin:20px auto; display:block;">
 
-      <div class="fila"><b>Cliente:</b> ${equipo.cliente}</div>
-      <div class="fila"><b>Tipo:</b> ${equipo.tipo}</div>
-      <div class="fila"><b>Serie:</b> ${equipo.serie}</div>
-      <div class="fila"><b>Modelo:</b> ${equipo.modelo}</div>
-      <div class="fila"><b>Estado:</b> ${equipo.estado}</div>
-      <div class="fila"><b>Ubicación:</b> ${equipo.ubicacion}</div>
-    `;
+  <div class="fila"><b>Cliente:</b> ${equipo.cliente}</div>
+  <div class="fila"><b>Tipo:</b> ${equipo.tipo}</div>
+  <div class="fila"><b>Serie:</b> ${equipo.serie}</div>
+  <div class="fila"><b>Modelo:</b> ${equipo.modelo}</div>
+  <div class="fila"><b>Estado:</b> ${equipo.estado}</div>
+  <div class="fila"><b>Ubicación:</b> ${equipo.ubicacion}</div>
+`;
   })
   .catch(err => {
     contenedor.innerHTML = `<p class="error">Error cargando datos</p>`;
