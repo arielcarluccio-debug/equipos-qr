@@ -76,7 +76,7 @@ fetch(URL)
       <p><b>Estado:</b> ${equipo.estado}</p>
       <p><b>Ubicación:</b> ${equipo.ubicacion}</p>
     `;
-  });
+  })
   .catch(err => {
     contenedor.innerHTML = `<p class="error">Error cargando datos</p>`;
     console.error(err);
