@@ -46,62 +46,37 @@ const id = params.get("id");
 const contenedor = document.getElementById("contenido");
 
 // 🔗 PEGÁ ACÁ TU LINK
-const URL = "https://docs.google.com/spreadsheets/d/1wFIR-6gcuVerEvO0Hwa1hXHj2OFcuoJmp_gVGycR5Vk/gviz/tq?tqx=out:json";
+const URL = "https://script.google.com/macros/s/AKfycbyiqXItMSuSC02dcm8QRQQQb9j_U3HOwuQ1ZGeepDBQQIsrGhxD6O3I2yQ6EOqzACZJ/exec";
 
 fetch(URL)
-  .then(res => res.text())
-  .then(text => {
-    // limpiar respuesta de Google
-    const json = JSON.parse(text.substr(47).slice(0, -2));
-    const rows = json.table.rows;
+  .then(res => res.json())
+  .then(data => {
 
-    let equipo = null;
-
-    rows.forEach(r => {
-      const fila = r.c;
-
-      const idEquipo = fila[1]?.v; // columna IDEquipo
-
-      if (idEquipo == id) {
-        equipo = {
-          cliente: fila[2]?.v,
-          tipo: fila[4]?.v,
-          serie: fila[5]?.v,
-          modelo: fila[6]?.v,
-          estado: fila[15]?.v,
-          ubicacion: fila[9]?.v,
-          foto: fila[3]?.v // columna Foto
-        };
-      }
-    });
+    const equipo = data.find(e => e.id == id);
 
     if (!equipo) {
-      contenedor.innerHTML = `<p class="error">Equipo no encontrado: ${id}</p>`;
+      contenedor.innerHTML = "Equipo no encontrado";
       return;
     }
 
     contenedor.innerHTML = `
-  <div style="text-align:center; margin-bottom:20px;">
-    <img src="logo.png" style="width:150px; margin-bottom:10px;">
-    
-    <div style="font-size:14px; color:#555;">
-      servicios@acaringenieria.com<br>
-      Tel: 11 62 86 68 64
-    </div>
-  </div>
+      <div style="text-align:center;">
+        <img src="logo.png" style="width:150px;">
+        <p>servicios@acaringenieria.com<br>Tel: 11 62 86 68 64</p>
+      </div>
 
-  <h1 style="text-align:center;">Ficha del equipo ${id}</h1>
+      <h1>Equipo ${id}</h1>
 
-  <img src="${equipo.foto}" style="width:100%; max-width:400px; border-radius:10px; margin:20px auto; display:block;">
+      <img src="${equipo.foto}" style="width:100%; max-width:400px;">
 
-  <div class="fila"><b>Cliente:</b> ${equipo.cliente}</div>
-  <div class="fila"><b>Tipo:</b> ${equipo.tipo}</div>
-  <div class="fila"><b>Serie:</b> ${equipo.serie}</div>
-  <div class="fila"><b>Modelo:</b> ${equipo.modelo}</div>
-  <div class="fila"><b>Estado:</b> ${equipo.estado}</div>
-  <div class="fila"><b>Ubicación:</b> ${equipo.ubicacion}</div>
-`;
-  })
+      <p><b>Cliente:</b> ${equipo.cliente}</p>
+      <p><b>Tipo:</b> ${equipo.tipo}</p>
+      <p><b>Serie:</b> ${equipo.serie}</p>
+      <p><b>Modelo:</b> ${equipo.modelo}</p>
+      <p><b>Estado:</b> ${equipo.estado}</p>
+      <p><b>Ubicación:</b> ${equipo.ubicacion}</p>
+    `;
+  });
   .catch(err => {
     contenedor.innerHTML = `<p class="error">Error cargando datos</p>`;
     console.error(err);
