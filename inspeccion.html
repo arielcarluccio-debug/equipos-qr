@@ -33,7 +33,7 @@
 
   if (!id) {
     document.getElementById('loading').textContent = 'Falta el parámetro id en la URL.';
-  } else if (DATA_API_URL.indexOf('https://script.google.com/macros/s/AKfycby9RCF4N1C3c04Fsi-9dF8SClNXcs9vax0zo3I3UVu8v5ExU6Cyzqtcqb33eBv5Yo9Hsg/exec') !== -1) {
+  } else if (DATA_API_URL.indexOf('PEGAR_ACA') !== -1) {
     document.getElementById('loading').textContent = 'Falta configurar DATA_API_URL en este archivo.';
   } else {
     fetch(DATA_API_URL + '?id=' + encodeURIComponent(id))
@@ -128,10 +128,6 @@
     document.getElementById('contenido').innerHTML = html;
     document.getElementById('loading').style.display = 'none';
     document.getElementById('contenido').style.display = 'block';
-  }
-</script>
-</body>
-</html>
   }
 </script>
 </body>
