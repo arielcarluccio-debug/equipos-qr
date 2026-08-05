@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Detalle de inspección</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto; padding: 16px; color:#222; }
+  h1 { font-size: 1.3rem; border-bottom: 2px solid #333; padding-bottom: 8px; }
+  .campo { margin: 6px 0; }
+  .campo b { display:inline-block; min-width: 190px; }
+  .seccion { margin-top: 20px; }
+  .seccion h2 { font-size: 1.05rem; background:#f0f0f0; padding:6px 10px; border-radius:4px; margin-bottom: 8px;}
+  .falla { color:#b00020; font-weight:bold; margin: 4px 0; }
+  #loading { text-align:center; padding: 40px 0; color:#888; }
+  a { color:#1a5fb4; }
+</style>
+</head>
+<body>
+  <div id="loading">Cargando inspección...</div>
+  <div id="contenido" style="display:none;"></div>
+
+<script>
+  // ⚠️ Pegar acá la URL que termina en /exec del Web App de Apps Script
+  const DATA_API_URL = https://script.google.com/macros/s/AKfycbwqSyse2GEbFrO2N1_ERklK0efbrqQFdBWfG2MF09LNR7s8R1fIe0n_y3LhoIB-WZmjJw/exec;
+
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+
+  if (!id) {
+    document.getElementById('loading').textContent = 'Falta el parámetro id en la URL.';
+  } else if (DATA_API_URL.indexOf('PEGAR_ACA') !== -1) {
+    document.getElementById('loading').textContent = 'Falta configurar DATA_API_URL en este archivo.';
+  } else {
+    fetch(DATA_API_URL + '?id=' + encodeURIComponent(id))
+      .then(function(r) { return r.json(); })
+      .then(function(datos) {
+        if (datos.error) {
+          document.getElementById('loading').textContent = 'Error: ' + datos.error;
+          return;
+        }
+        mostrarDatos(datos);
+      })
+      .catch(function(err) {
+        document.getElementById('loading').textContent = 'Error al cargar los datos: ' + err;
+      });
+  }
+
+  function campo(label, valor) {
+    if (!valor) return '';
+    return '<div class="campo"><b>' + label + ':</b> ' + valor + '</div>';
+  }
+
+  function fallaBloque(titulo, valorFalla, valorDesc) {
+    if (!valorFalla) return '';
+    return '<div class="falla">' + titulo + ': ' + valorFalla + (valorDesc ? ' — ' + valorDesc : '') + '</div>';
+  }
+
+  function mostrarDatos(d) {
+    var html = '<h1>Inspección ' + (d['IDInspIzaje'] || '') + '</h1>';
+
+    html += campo('Fecha', d['Submission Date']);
+    html += campo('Cliente', d['Cliente']);
+    html += campo('OT', d['OT']);
+    html += campo('Equipo', d['IDEquipoIZ']);
+    html += campo('Tipo de equipo', d['Tipo de equipo']);
+    html += campo('Serie', d['Serie']);
+    html += campo('Modelo', d['Modelo']);
+    html += campo('Año fabricación', d['Año Fabricación']);
+    html += campo('Capacidad máx. (Kg)', d['Capacidad de Carga Máxima en Kg']);
+    html += campo('Montada sobre vehículo', d['Montada sobre vehículo?']);
+    html += campo('Marca/modelo vehículo', d['Marca y Modelo Vehículo']);
+    html += campo('Patente', d['Patente Vehículo']);
+
+    html += '<div class="seccion"><h2>Mecánica</h2>';
+    html += campo('Estado', d['Fijaciones y articulaciones mecánicas (chavetas, pasadores, ganchos, grilletes, cables, apertura de apoyos, funcionamiento de comandos, estado de neumáticos, soldaduras, grietas, abolladuras)']);
+    for (var n = 1; n <= 3; n++) {
+      html += fallaBloque('Falla ' + n, d['Falla mecánica ' + n], d['Descripción Falla Mecánica ' + n]);
+    }
+    html += '</div>';
+
+    html += '<div class="seccion"><h2>Hidráulica</h2>';
+    html += campo('Estado', d['Circuito hidráulica (pérdidas de aceite, válvulas desconectadas, caños mal sujetados, mangueras dañadas)']);
+    for (var m = 1; m <= 3; m++) {
+      html += fallaBloque('Falla ' + m, d['Falla Hidráulica ' + m], d['Descripción Falla Hidráulica ' + m]);
+    }
+    html += '</div>';
+
+    html += '<div class="seccion"><h2>Eléctrica</h2>';
+    html += campo('Sistema eléctrico', d['Sistema eléctrico']);
+    html += fallaBloque('Falla', d['Falla eléctrica 1'], d['Descripción Falla Eléctrica 1']);
+    html += '</div>';
+
+    html += '<div class="seccion"><h2>Resultado</h2>';
+    html += campo('Diagrama de carga a la vista', d['Diagrama de carga a la vista y claro']);
+    html += campo('Parada de seguridad', d['Parada de seguridad']);
+    html += campo('Prueba funcional', d['Prueba funcional']);
+    html += campo('Carga utilizada (Kg)', d['Carga utilizada en Kg']);
+    html += '</div>';
+
+    if (d['URL Informe PDF']) {
+      html += '<div class="seccion"><a href="' + d['URL Informe PDF'] + '" target="_blank">📄 Ver informe completo en PDF</a></div>';
+    }
+
+    document.getElementById('contenido').innerHTML = html;
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('contenido').style.display = 'block';
+  }
+</script>
+</body>
+</html>
