@@ -14,6 +14,10 @@
   .falla { color:#b00020; font-weight:bold; margin: 4px 0; }
   #loading { text-align:center; padding: 40px 0; color:#888; }
   a { color:#1a5fb4; }
+  .fotos { display:flex; flex-wrap:wrap; gap:12px; margin-top:8px; }
+  .foto-bloque { text-align:center; }
+  .foto-label { font-size:0.8rem; color:#555; margin-bottom:4px; }
+  img.foto { max-width:150px; max-height:150px; border-radius:6px; border:1px solid #ddd; object-fit:cover; }
 </style>
 </head>
 <body>
@@ -22,14 +26,14 @@
 
 <script>
   // ⚠️ Pegar acá la URL que termina en /exec del Web App de Apps Script
-  const DATA_API_URL = 'https://script.google.com/macros/s/AKfycbwqSyse2GEbFrO2N1_ERklK0efbrqQFdBWfG2MF09LNR7s8R1fIe0n_y3LhoIB-WZmjJw/exec';
+  const DATA_API_URL = 'https://script.google.com/macros/s/AKfycby9RCF4N1C3c04Fsi-9dF8SClNXcs9vax0zo3I3UVu8v5ExU6Cyzqtcqb33eBv5Yo9Hsg/exec';
 
   const params = new URLSearchParams(window.location.search);
   const id = params.get('id');
 
   if (!id) {
     document.getElementById('loading').textContent = 'Falta el parámetro id en la URL.';
-  } else if (DATA_API_URL.indexOf('PEGAR_ACA') !== -1) {
+  } else if (DATA_API_URL.indexOf('https://script.google.com/macros/s/AKfycby9RCF4N1C3c04Fsi-9dF8SClNXcs9vax0zo3I3UVu8v5ExU6Cyzqtcqb33eBv5Yo9Hsg/exec') !== -1) {
     document.getElementById('loading').textContent = 'Falta configurar DATA_API_URL en este archivo.';
   } else {
     fetch(DATA_API_URL + '?id=' + encodeURIComponent(id))
@@ -56,6 +60,12 @@
     return '<div class="falla">' + titulo + ': ' + valorFalla + (valorDesc ? ' — ' + valorDesc : '') + '</div>';
   }
 
+  function foto(label, url) {
+    if (!url) return '';
+    return '<div class="foto-bloque"><div class="foto-label">' + label + '</div>' +
+           '<a href="' + url + '" target="_blank"><img class="foto" src="' + url + '" loading="lazy" /></a></div>';
+  }
+
   function mostrarDatos(d) {
     var html = '<h1>Inspección ' + (d['IDInspIzaje'] || '') + '</h1>';
 
@@ -71,6 +81,13 @@
     html += campo('Montada sobre vehículo', d['Montada sobre vehículo?']);
     html += campo('Marca/modelo vehículo', d['Marca y Modelo Vehículo']);
     html += campo('Patente', d['Patente Vehículo']);
+
+    if (d['Foto del equipo'] || d['Foto de la Chapa']) {
+      html += '<div class="seccion"><h2>Fotos</h2><div class="fotos">';
+      html += foto('Equipo', d['Foto del equipo']);
+      html += foto('Chapa', d['Foto de la Chapa']);
+      html += '</div></div>';
+    }
 
     html += '<div class="seccion"><h2>Mecánica</h2>';
     html += campo('Estado', d['Fijaciones y articulaciones mecánicas (chavetas, pasadores, ganchos, grilletes, cables, apertura de apoyos, funcionamiento de comandos, estado de neumáticos, soldaduras, grietas, abolladuras)']);
@@ -96,6 +113,12 @@
     html += campo('Parada de seguridad', d['Parada de seguridad']);
     html += campo('Prueba funcional', d['Prueba funcional']);
     html += campo('Carga utilizada (Kg)', d['Carga utilizada en Kg']);
+    if (d['Foto de diagrama de carga'] || d['Foto de Prueba Funcional']) {
+      html += '<div class="fotos">';
+      html += foto('Diagrama de carga', d['Foto de diagrama de carga']);
+      html += foto('Prueba funcional', d['Foto de Prueba Funcional']);
+      html += '</div>';
+    }
     html += '</div>';
 
     if (d['URL Informe PDF']) {
@@ -105,6 +128,10 @@
     document.getElementById('contenido').innerHTML = html;
     document.getElementById('loading').style.display = 'none';
     document.getElementById('contenido').style.display = 'block';
+  }
+</script>
+</body>
+</html>
   }
 </script>
 </body>
