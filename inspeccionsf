@@ -60,7 +60,7 @@
 
 <script>
   // ⚠️ Pegar acá la URL que termina en /exec del Web App de Apps Script (WebApp_DatosSF.gs)
-  const DATA_API_URL = 'PEGAR_ACA_LA_URL_/exec';
+  const DATA_API_URL = 'https://script.google.com/macros/s/AKfycbya5tGnxM8yLfK7AY0oxehnP-3F7Ojo73xTBesuxxgP-Ll9YPhJJoPMeRUYN0tk7fbR/exec';
 
   const params = new URLSearchParams(window.location.search);
   const id = params.get('id');
