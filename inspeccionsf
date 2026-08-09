@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Detalle de equipo</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 0 16px 16px; color:#222; }
+
+  /* Encabezado con logo + mail de la empresa */
+  .header-empresa {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; padding: 14px 4px; border-bottom: 3px solid #333; margin-bottom: 16px;
+  }
+  .header-empresa img.logo { max-height: 60px; max-width: 220px; object-fit: contain; }
+  .header-empresa .email-empresa { font-size: 0.95rem; color: #444; white-space: nowrap; }
+
+  h1 { font-size: 1.3rem; margin-top: 4px; }
+
+  /* Bloque principal: foto a la izquierda, datos a la derecha */
+  .bloque-principal { display:flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }
+  .col-foto { flex: 0 0 220px; }
+  .col-foto img.foto-equipo { width: 100%; max-width: 220px; border-radius: 8px; border:1px solid #ddd; object-fit: cover; display:block; }
+  .col-foto .sin-foto { width: 100%; max-width:220px; aspect-ratio: 1/1; background:#f2f2f2; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#999; font-size:0.85rem; text-align:center; }
+  .col-datos { flex: 1; min-width: 240px; }
+
+  .campo { margin: 6px 0; }
+  .campo b { display:inline-block; min-width: 190px; }
+  .seccion { margin-top: 20px; }
+  .seccion h2 { font-size: 1.05rem; background:#f0f0f0; padding:6px 10px; border-radius:4px; margin-bottom: 8px;}
+  #loading { text-align:center; padding: 40px 0; color:#888; }
+  a { color:#1a5fb4; }
+  .fotos { display:flex; flex-wrap:wrap; gap:12px; margin-top:8px; }
+  .foto-bloque { text-align:center; }
+  .foto-label { font-size:0.8rem; color:#555; margin-bottom:4px; }
+  img.foto { max-width:150px; max-height:150px; border-radius:6px; border:1px solid #ddd; object-fit:cover; }
+  .insp-item { border:1px solid #ddd; border-radius:6px; padding:10px 12px; margin-bottom:10px; }
+  .insp-item .campo b { min-width: 160px; }
+  .vencido { color:#b00020; font-weight:bold; }
+  .sin-historial { color:#888; font-style:italic; }
+
+  @media (max-width: 480px) {
+    .header-empresa { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .col-foto { flex: 0 0 auto; width: 100%; }
+    .col-foto img.foto-equipo, .col-foto .sin-foto { max-width: 260px; margin: 0 auto; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ⚠️ Reemplazar logo.png por el nombre real del archivo si usás otro,
+       y subirlo al mismo repo/carpeta que este HTML -->
+  <div class="header-empresa">
+    <img class="logo" src="logo.png" alt="Logo empresa" />
+    <div class="email-empresa">servicios@acaringenieria.com</div>
+  </div>
+
+  <div id="loading">Cargando equipo...</div>
+  <div id="contenido" style="display:none;"></div>
+
+<script>
+  // ⚠️ Pegar acá la URL que termina en /exec del Web App de Apps Script (WebApp_DatosSF.gs)
+  const DATA_API_URL = 'PEGAR_ACA_LA_URL_/exec';
+
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+
+  if (!id) {
+    document.getElementById('loading').textContent = 'Falta el parámetro id en la URL.';
+  } else if (DATA_API_URL.indexOf('PEGAR_ACA') !== -1) {
+    document.getElementById('loading').textContent = 'Falta configurar DATA_API_URL en este archivo.';
+  } else {
+    fetch(DATA_API_URL + '?id=' + encodeURIComponent(id))
+      .then(function(r) { return r.json(); })
+      .then(function(datos) {
+        if (datos.error) {
+          document.getElementById('loading').textContent = 'Error: ' + datos.error;
+          return;
+        }
+        mostrarDatos(datos);
+      })
+      .catch(function(err) {
+        document.getElementById('loading').textContent = 'Error al cargar los datos: ' + err;
+      });
+  }
+
+  function campo(label, valor) {
+    if (!valor) return '';
+    return '<div class="campo"><b>' + label + ':</b> ' + valor + '</div>';
+  }
+
+  function foto(label, url) {
+    if (!url) return '';
+    return '<div class="foto-bloque"><div class="foto-label">' + label + '</div>' +
+           '<a href="' + url + '" target="_blank"><img class="foto" src="' + url + '" loading="lazy" /></a></div>';
+  }
+
+  function fechaCorta(valor) {
+    if (!valor) return '';
+    try {
+      const d = new Date(valor);
+      if (isNaN(d.getTime())) return valor;
+      return d.toLocaleDateString('es-AR');
+    } catch (e) {
+      return valor;
+    }
+  }
+
+  function mostrarDatos(datos) {
+    const eq = datos.equipo || {};
+    const inspecciones = datos.inspecciones || [];
+
+    var html = '<h1>Equipo ' + (eq['IDEquipo'] || '') + '</h1>';
+
+    html += '<div class="bloque-principal">';
+
+    // Columna izquierda: foto del equipo
+    html += '<div class="col-foto">';
+    if (eq['Foto']) {
+      html += '<a href="' + eq['Foto'] + '" target="_blank"><img class="foto-equipo" src="' + eq['Foto'] + '" loading="lazy" /></a>';
+    } else {
+      html += '<div class="sin-foto">Sin foto</div>';
+    }
+    html += '</div>';
+
+    // Columna derecha: datos del equipo
+    html += '<div class="col-datos">';
+    html += campo('Fecha alta', fechaCorta(eq['Fecha']));
+    html += campo('Cliente', eq['Cliente']);
+    html += campo('Ubicación', eq['Ubicación']);
+    html += campo('Denominación', eq['Denominación']);
+    html += campo('Fabricante', eq['Fabricante']);
+    html += campo('Serie', eq['Serie']);
+    html += campo('Año fabricación', eq['AnoFabricacion']);
+    html += campo('Volumen', eq['Volumen']);
+    html += campo('Última inspección', fechaCorta(eq['UltimaInsp']));
+    html += campo('Última prueba hidráulica', fechaCorta(eq['UltimaPH']));
+    html += campo('Vencimiento PH', fechaCorta(eq['FechaVencimientoPH']));
+    html += campo('Próxima inspección', fechaCorta(eq['FechaProximaInsp']));
+    html += '</div>'; // .col-datos
+
+    html += '</div>'; // .bloque-principal
+
+    html += '<div class="seccion"><h2>Historial de inspecciones</h2>';
+    if (inspecciones.length === 0) {
+      html += '<div class="sin-historial">Sin inspecciones registradas.</div>';
+    } else {
+      inspecciones.forEach(function(insp) {
+        html += '<div class="insp-item">';
+        html += campo('Fecha', fechaCorta(insp['Fecha']));
+        html += campo('OT', insp['OT']);
+        html += campo('Estado', insp['EstadoInsp']);
+        html += campo('Prueba hidráulica', insp['Prueba hidráulica']);
+        html += campo('Observaciones PH', insp['Observaciones prueba hidráulica']);
+        html += campo('Observaciones', insp['ObservacionesInsp']);
+        if (insp['Fotos del defecto']) {
+          html += '<div class="fotos">' + foto('Defecto', insp['Fotos del defecto']) + '</div>';
+        }
+        if (insp['InformePDF']) {
+          html += '<div class="campo"><a href="' + insp['InformePDF'] + '" target="_blank">📄 Ver informe completo en PDF</a></div>';
+        } else if (insp['InformeDoc']) {
+          html += '<div class="campo"><a href="' + insp['InformeDoc'] + '" target="_blank">📄 Ver informe</a></div>';
+        }
+        html += '</div>';
+      });
+    }
+    html += '</div>';
+
+    document.getElementById('contenido').innerHTML = html;
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('contenido').style.display = 'block';
+  }
+</script>
+</body>
+</html>
