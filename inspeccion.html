@@ -66,10 +66,20 @@
            '<a href="' + url + '" target="_blank"><img class="foto" src="' + url + '" loading="lazy" /></a></div>';
   }
 
+  function formatearFecha(valor) {
+  if (!valor) return '';
+  var d = new Date(valor);
+  if (isNaN(d.getTime())) return valor; // si no se puede parsear, mostrar tal cual vino
+  var dia = String(d.getDate()).padStart(2, '0');
+  var mes = String(d.getMonth() + 1).padStart(2, '0');
+  var anio = d.getFullYear();
+  return dia + '/' + mes + '/' + anio;
+}
+
   function mostrarDatos(d) {
     var html = '<h1>Inspección ' + (d['IDInspIzaje'] || '') + '</h1>';
 
-    html += campo('Fecha', d['Submission Date']);
+    html += campo('Fecha', formatearFecha(d['Submission Date']));
     html += campo('Cliente', d['Cliente']);
     html += campo('OT', d['OT']);
     html += campo('Equipo', d['IDEquipoIZ']);
