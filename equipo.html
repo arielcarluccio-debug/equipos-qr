@@ -1,89 +1,248 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ficha de Equipo</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 700px;
-      margin: 40px auto;
-      padding: 20px;
-      background: #f7f7f7;
-      color: #222;
-    }
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 24px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-    }
-    h1 {
-      margin-top: 0;
-    }
-    .fila {
-      margin: 10px 0;
-    }
-    .label {
-      font-weight: bold;
-    }
-    .error {
-      color: #b00020;
-      font-weight: bold;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ficha de equipo</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 0 16px 16px; color:#222; }
+  .header-empresa {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 6px; padding: 14px 4px; border-bottom: 3px solid #333; margin-bottom: 16px; text-align: center;
+  }
+  .header-empresa img.logo { max-height: 120px; max-width: 440px; object-fit: contain; display: block; margin: 0 auto; }
+  .header-empresa .email-empresa { font-size: 1.05rem; color: #444; }
+  h1 { font-size: 1.3rem; margin-top: 4px; }
+  .bloque-principal { display:flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }
+  .col-foto { flex: 0 0 220px; }
+  .col-foto img.foto-equipo { width: 100%; max-width: 220px; border-radius: 8px; border:1px solid #ddd; object-fit: cover; display:block; }
+  .col-foto .sin-foto { width: 100%; max-width:220px; aspect-ratio: 1/1; background:#f2f2f2; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#999; font-size:0.85rem; text-align:center; }
+  .col-datos { flex: 1; min-width: 240px; }
+  .campo { margin: 6px 0; }
+  .campo b { display:inline-block; min-width: 190px; }
+  .seccion { margin-top: 20px; }
+  .seccion h2 { font-size: 1.05rem; background:#f0f0f0; padding:6px 10px; border-radius:4px; margin-bottom: 8px;}
+  #loading { text-align:center; padding: 40px 0; color:#888; }
+  a { color:#1a5fb4; }
+  .fotos { display:flex; flex-wrap:wrap; gap:12px; margin-top:8px; }
+  .foto-bloque { text-align:center; }
+  .foto-label { font-size:0.8rem; color:#555; margin-bottom:4px; }
+  img.foto { max-width:150px; max-height:150px; border-radius:6px; border:1px solid #ddd; object-fit:cover; }
+  .insp-item { border:1px solid #ddd; border-radius:6px; padding:10px 12px; margin-bottom:10px; }
+  .insp-item .campo b { min-width: 160px; }
+  .sin-historial { color:#888; font-style:italic; }
+
+  .etq { border:2px dashed #1a5fb4; border-radius:10px; padding:18px; max-width:420px; margin:0 auto; }
+  .etq .codigo { font-family: monospace; font-size:1.6rem; font-weight:bold; letter-spacing:2px; text-align:center; margin:6px 0 14px; }
+  .etq label { display:block; font-weight:bold; margin:12px 0 4px; }
+  .etq input { width:100%; box-sizing:border-box; padding:10px; font-size:1rem; border:1px solid #bbb; border-radius:6px; }
+  .etq button { margin-top:16px; width:100%; padding:12px; font-size:1rem; background:#1a5fb4; color:#fff; border:0; border-radius:6px; }
+  .etq button:disabled { background:#999; }
+  .msg { margin-top:12px; font-weight:bold; }
+  .msg.error { color:#b00020; } .msg.ok { color:#1b7f3b; }
+
+  @media (max-width: 480px) {
+    .col-foto { flex: 0 0 auto; width: 100%; }
+    .col-foto img.foto-equipo, .col-foto .sin-foto { max-width: 260px; margin: 0 auto; }
+  }
+</style>
 </head>
 <body>
-  <div class="card" id="contenido">
-    Cargando...
+
+  <div class="header-empresa">
+    <img class="logo" src="logo.png" alt="Logo empresa" />
+    <div class="email-empresa">servicios@acaringenieria.com · Tel: 11 6286-6864</div>
   </div>
 
+  <div id="loading">Cargando equipo...</div>
+  <div id="contenido" style="display:none;"></div>
+
 <script>
-const params = new URLSearchParams(window.location.search);
-const id = params.get("id");
+  // ===== CONFIGURACIÓN =====
+  const URL_CF = 'https://script.google.com/macros/s/AKfycby7zVTVQENe6EwJXzElZVtTiDSBywQ2iz77sFg0C9AjuIMPsGiu4tBGbzzWvt4ONnOA/exec';
+  const URL_SF = 'https://script.google.com/macros/s/AKfycbw-W8e-HdQGznljPJ0J6EZTS4vhg2j2S7WltJQBXAK0Qd3PDe4KdUCrWtDf5j6VKgl9/exec';
+  // Prefijo del IDEquipo -> script que trae la ficha
+  const APIS = { EF: URL_CF, EQ: URL_SF };
+  // Script donde instalaste Etiquetas.gs
+  const URL_ETIQUETAS = URL_SF;
+  // Respaldo para QR viejos que apuntaban al worker
+  const WORKER_URL = 'https://equipos-api.arielcarluccio.workers.dev/';
+  // =========================
 
-const contenedor = document.getElementById("contenido");
+  const idOriginal = (new URLSearchParams(window.location.search).get('id') || '').trim();
+  const elLoading = document.getElementById('loading');
+  const elContenido = document.getElementById('contenido');
 
-// 🔗 PEGÁ ACÁ TU LINK
-const URL = "https://equipos-api.arielcarluccio.workers.dev/";
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function mostrar(html) {
+    elContenido.innerHTML = html;
+    elLoading.style.display = 'none';
+    elContenido.style.display = 'block';
+  }
+  function pedir(url) {
+    return fetch(url).then(r => r.json()).catch(() => null);
+  }
+  function prefijo(id) {
+    const p = String(id || '').toUpperCase().slice(0, 2);
+    return APIS[p] ? p : '';
+  }
 
-fetch(URL)
-  .then(res => res.json())
-  .then(json => {
-    
+  async function iniciar() {
+    if (!idOriginal) { elLoading.textContent = 'Falta el parámetro id en la URL.'; return; }
 
-  const equipo = json.find(e => e.id == id);
-    
-    if (!equipo) {
-      contenedor.innerHTML = "Equipo no encontrado";
-      return;
+    // 1) QR viejo: el id ya es un IDEquipo (EF... o EQ...) -> directo a su hoja
+    if (prefijo(idOriginal)) {
+      if (await cargarFicha(idOriginal)) return;
+      return await respaldoONoEncontrado();
     }
 
-   const imgURL = equipo.foto; 
-    
-    contenedor.innerHTML = `
-      <div style="text-align:center;">
-        <img src="logo.png" style="width:150px;">
-        <p>servicios@acaringenieria.com<br>Tel: 11 62 86 68 64</p>
-      </div>
+    // 2) Etiqueta nueva: buscar a qué equipo está asignada
+    const r = await pedir(URL_ETIQUETAS + '?accion=resolver&id=' + encodeURIComponent(idOriginal));
+    if (r && r.idEquipo) {
+      if (await cargarFicha(r.idEquipo)) return;
+      mostrar('<h1>Equipo no encontrado</h1><p>La etiqueta está asignada al equipo <b>' + esc(r.idEquipo) +
+              '</b>, pero ese equipo no aparece en la planilla.</p>');
+      return;
+    }
+    if (r && r.etiquetaLibre) { mostrarFormulario(r.codigo); return; }
 
-      <h1>Equipo ${id}</h1>
+    await respaldoONoEncontrado();
+  }
 
-      <img src="${imgURL}" style="width:100%; max-width:400px;">
+  async function cargarFicha(idEquipo) {
+    const api = APIS[prefijo(idEquipo)];
+    if (!api) return false;
+    const d = await pedir(api + '?id=' + encodeURIComponent(idEquipo));
+    if (d && !d.error && d.equipo) { mostrarDatos(d); return true; }
+    return false;
+  }
 
-      <p><b>Cliente:</b> ${equipo.cliente}</p>
-      <p><b>Tipo:</b> ${equipo.tipo}</p>
-      <p><b>Serie:</b> ${equipo.serie}</p>
-      <p><b>Modelo:</b> ${equipo.modelo}</p>
-      <p><b>Estado:</b> ${equipo.estado}</p>
-      <p><b>Ubicación:</b> ${equipo.ubicacion}</p>
-    `;
-  })
-  .catch(err => {
-    contenedor.innerHTML = `<p class="error">Error cargando datos</p>`;
-    console.error(err);
-  });
+  async function respaldoONoEncontrado() {
+    const lista = await pedir(WORKER_URL);
+    const viejo = Array.isArray(lista) && lista.find(e => e.id == idOriginal);
+    if (viejo) { mostrarViejo(viejo); return; }
+    mostrar('<h1>Equipo no encontrado</h1><p>El código <b>' + esc(idOriginal) + '</b> no corresponde a ningún equipo registrado.</p>');
+  }
+
+  // ---------- Etiqueta sin asignar ----------
+  function mostrarFormulario(codigo) {
+    let tecnico = '';
+    try { tecnico = localStorage.getItem('tecnico') || ''; } catch (e) {}
+    mostrar(
+      '<div class="etq">' +
+        '<h1 style="text-align:center">Etiqueta sin asignar</h1>' +
+        '<div class="codigo">' + esc(codigo.slice(0,3) + '-' + codigo.slice(3)) + '</div>' +
+        '<p>Si sos técnico, asociala al equipo donde la pegaste.</p>' +
+        '<label for="f-equipo">ID del equipo (EF… con fuego / EQ… sin fuego)</label>' +
+        '<input id="f-equipo" autocomplete="off" autocapitalize="characters">' +
+        '<label for="f-tecnico">Técnico</label><input id="f-tecnico" value="' + esc(tecnico) + '">' +
+        '<label for="f-pin">PIN</label><input id="f-pin" type="password" inputmode="numeric">' +
+        '<button id="f-enviar">Asociar etiqueta</button>' +
+        '<div id="f-msg" class="msg"></div>' +
+      '</div>'
+    );
+    document.getElementById('f-enviar').onclick = () => asociar(codigo);
+  }
+
+  async function asociar(codigo) {
+    const idEquipo = document.getElementById('f-equipo').value.trim().toUpperCase();
+    const tecnico = document.getElementById('f-tecnico').value.trim();
+    const pin = document.getElementById('f-pin').value.trim();
+    const msg = document.getElementById('f-msg');
+    const btn = document.getElementById('f-enviar');
+
+    if (!idEquipo || !pin) { msg.className = 'msg error'; msg.textContent = 'Completá el ID del equipo y el PIN.'; return; }
+    if (!prefijo(idEquipo)) { msg.className = 'msg error'; msg.textContent = 'El ID tiene que empezar con EF o EQ.'; return; }
+    try { localStorage.setItem('tecnico', tecnico); } catch (e) {}
+
+    btn.disabled = true; msg.className = 'msg'; msg.textContent = 'Asociando...';
+    const q = new URLSearchParams({ accion: 'asociar', codigo, idEquipo, tecnico, pin });
+    const r = await pedir(URL_ETIQUETAS + '?' + q.toString());
+    if (r && r.ok) {
+      msg.className = 'msg ok'; msg.textContent = 'Listo: etiqueta asociada al equipo ' + r.idEquipo + '.';
+      setTimeout(() => location.reload(), 1200);
+    } else {
+      btn.disabled = false;
+      msg.className = 'msg error';
+      msg.textContent = (r && r.error) || 'No se pudo asociar. Probá de nuevo.';
+    }
+  }
+
+  // ---------- Ficha (igual que inspeccioncf.html) ----------
+  function campo(label, valor) {
+    if (!valor) return '';
+    return '<div class="campo"><b>' + label + ':</b> ' + valor + '</div>';
+  }
+  function foto(label, url) {
+    if (!url) return '';
+    return '<div class="foto-bloque"><div class="foto-label">' + label + '</div>' +
+           '<a href="' + url + '" target="_blank"><img class="foto" src="' + url + '" loading="lazy" /></a></div>';
+  }
+  function fechaCorta(valor) {
+    if (!valor) return '';
+    const d = new Date(valor);
+    return isNaN(d.getTime()) ? valor : d.toLocaleDateString('es-AR');
+  }
+
+  function mostrarDatos(datos) {
+    const eq = datos.equipo || {};
+    const inspecciones = datos.inspecciones || [];
+    let html = '<h1>Equipo ' + esc(eq['IDEquipo'] || eq['IDEquipoCF'] || '') + '</h1><div class="bloque-principal"><div class="col-foto">';
+    html += eq['Foto']
+      ? '<a href="' + eq['Foto'] + '" target="_blank"><img class="foto-equipo" src="' + eq['Foto'] + '" loading="lazy" /></a>'
+      : '<div class="sin-foto">Sin foto</div>';
+    html += '</div><div class="col-datos">';
+    html += campo('Fecha alta', fechaCorta(eq['Fecha']));
+    html += campo('Cliente', eq['Cliente']);
+    html += campo('Ubicación', eq['Ubicación']);
+    html += campo('Denominación', eq['Denominación']);
+    html += campo('Fabricante', eq['Fabricante']);
+    html += campo('Serie', eq['Serie']);
+    html += campo('Año fabricación', eq['AnoFabricacion']);
+    html += campo('Volumen', eq['Volumen']);
+    html += campo('Última inspección', fechaCorta(eq['UltimaInsp']));
+    html += campo('Última prueba hidráulica', fechaCorta(eq['UltimaPH']));
+    html += campo('Vencimiento PH', fechaCorta(eq['FechaVencimientoPH']));
+    html += campo('Próxima inspección', fechaCorta(eq['FechaProximaInsp']));
+    html += '</div></div>';
+
+    html += '<div class="seccion"><h2>Historial de inspecciones</h2>';
+    if (inspecciones.length === 0) {
+      html += '<div class="sin-historial">Sin inspecciones registradas.</div>';
+    } else {
+      inspecciones.forEach(function(insp) {
+        html += '<div class="insp-item">';
+        html += campo('Fecha', fechaCorta(insp['Fecha']));
+        html += campo('OT', insp['OT']);
+        html += campo('Estado', insp['EstadoInsp']);
+        html += campo('Prueba hidráulica', insp['Prueba hidráulica']);
+        html += campo('Observaciones PH', insp['Observaciones prueba hidráulica']);
+        html += campo('Observaciones', insp['ObservacionesInsp']);
+        if (insp['Fotos del defecto']) html += '<div class="fotos">' + foto('Defecto', insp['Fotos del defecto']) + '</div>';
+        if (insp['InformePDF']) {
+          html += '<div class="campo"><a href="' + insp['InformePDF'] + '" target="_blank">📄 Ver informe completo en PDF</a></div>';
+        } else if (insp['InformeDoc']) {
+          html += '<div class="campo"><a href="' + insp['InformeDoc'] + '" target="_blank">📄 Ver informe</a></div>';
+        }
+        html += '</div>';
+      });
+    }
+    html += '</div>';
+    mostrar(html);
+  }
+
+  function mostrarViejo(equipo) {
+    mostrar(
+      '<h1>Equipo ' + esc(idOriginal) + '</h1>' +
+      (equipo.foto ? '<img src="' + equipo.foto + '" style="width:100%; max-width:400px;">' : '') +
+      campo('Cliente', equipo.cliente) + campo('Tipo', equipo.tipo) + campo('Serie', equipo.serie) +
+      campo('Modelo', equipo.modelo) + campo('Estado', equipo.estado) + campo('Ubicación', equipo.ubicacion)
+    );
+  }
+
+  iniciar();
 </script>
 </body>
 </html>
